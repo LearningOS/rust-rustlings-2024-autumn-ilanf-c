@@ -1,9 +1,9 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
+use std::borrow::BorrowMut;
 use std::cmp::Ord;
 use std::default::Default;
 
@@ -38,8 +38,22 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count += 1;
+        self.bubble_up(self.count);
     }
-
+    fn bubble_up(&mut self, idx: usize) {
+        let mut idx = idx;
+        while idx > 1 {
+            let parent_idx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+                self.items.swap(idx, parent_idx);
+                idx = parent_idx;
+            } else {
+                break;
+            }
+        }
+    }
     fn parent_idx(&self, idx: usize) -> usize {
         idx / 2
     }
@@ -56,9 +70,45 @@ where
         self.left_child_idx(idx) + 1
     }
 
-    fn smallest_child_idx(&self, idx: usize) -> usize {
+    fn smallest_child_idx(&self, idx: usize) -> Option<usize> {
         //TODO
-		0
+        if !self.children_present(idx) {
+            return None;
+        }
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        if right > self.count {
+            return Some(left);
+        }
+        if ((self.comparator)(&self.items[right], &self.items[left])) {
+            Some(right)
+        } else {
+            Some(left)
+        }
+    }
+    pub fn remove(&mut self) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
+
+        // 交换根元素与最后一个元素
+        self.items.swap(1, self.count);
+        let removed = self.items.pop();
+        self.count -= 1;
+        self.bubble_down(1);
+        removed
+    }
+
+    fn bubble_down(&mut self, idx: usize) {
+        let mut idx = idx;
+        while let Some(smallest_child_idx) = self.smallest_child_idx(idx) {
+            if (self.comparator)(&self.items[smallest_child_idx], &self.items[idx]) {
+                self.items.swap(idx, smallest_child_idx);
+                idx = smallest_child_idx;
+            } else {
+                break;
+            }
+        }
     }
 }
 
@@ -79,13 +129,13 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Ord,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+        self.remove()
     }
 }
 
